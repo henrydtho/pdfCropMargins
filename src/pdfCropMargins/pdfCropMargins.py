@@ -43,6 +43,10 @@ def main():
     cleanup_and_exit = sys.exit # Function to exit (in finally) before the import.
     exit_code = 0
 
+    # When running as a frozen .app with no arguments, launch the GUI automatically.
+    if getattr(sys, "frozen", False) and len(sys.argv) == 1:
+        sys.argv.append("--gui")
+
     # Imports are done here inside the try block so some ugly (and useless) traceback
     # info is avoided on user's Ctrl-C (`KeyboardInterrupt`, `EOFError` on Windows)
     # during startup.
@@ -177,4 +181,7 @@ def crop(argv_list=None, *, quiet=False, string_io=False):
 
     finally: # In case race conditions prevent execution of the context manager __exit__.
         uninterrupted_remove_program_temp_directory()
+
+if __name__ == '__main__':
+    main()
 

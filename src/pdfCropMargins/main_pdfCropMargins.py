@@ -88,6 +88,7 @@ Source code site: https://github.com/abarker/pdfCropMargins
 
 import sys
 import os
+import re
 import shutil
 import time
 from warnings import warn
@@ -113,6 +114,54 @@ from .calculate_bounding_boxes import get_bounding_box_list
 ##
 
 args = None # Global set during cmd-line processing (since almost all funs use it).
+
+##
+## Regex patterns used to detect page numbers and dates on the last page.
+##
+
+_MONTH_NAMES = (r"(?:january|february|march|april|may|june|july|august|"
+                r"september|october|november|december|"
+                r"jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)")
+
+_PAGE_NUMBER_RE = re.compile(
+    r"""^\s*(?:
+        \d+                        # bare number: 42
+      | -\s*\d+\s*-               # "- 42 -"
+      | \[\s*\d+\s*\]             # "[42]"
+      | page\s+\d+                # "page 42"
+      | p\.?\s*\d+                # "p. 42" or "p42"
+      | \d+\s+of\s+\d+            # "42 of 100"
+    )\s*$""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_DATE_RE = re.compile(
+    rf"""^\s*(?:
+        \d{{1,2}}[/\-\.]\d{{1,2}}[/\-\.]\d{{2,4}}          # 01/01/2024
+      | \d{{4}}[/\-\.]\d{{1,2}}[/\-\.]\d{{1,2}}             # 2024-01-01
+      | {_MONTH_NAMES}\.?\s+\d{{1,2}},?\s+\d{{4}}           # January 14, 2024
+      | \d{{1,2}}\s+{_MONTH_NAMES}\.?\s+\d{{4}}             # 14 January 2024
+      | {_MONTH_NAMES}\.?\s+\d{{4}}                         # January 2024
+    )\s*$""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+def delete_last_page_if_number_or_date(doc_wrapper):
+    """Delete the last page of the document if its entire text is only a page
+    number or a date.  Does nothing if the document has only one page."""
+    doc = doc_wrapper.document
+    if doc.page_count < 2:
+        return
+    text = doc[-1].get_text().strip()
+    if not text:
+        return
+    if _PAGE_NUMBER_RE.match(text) or _DATE_RE.match(text):
+        if args.verbose:
+            print(f"\nDeleting last page (page {doc.page_count}) because its"
+                  f" text contains only a page number or date: {text!r}")
+        doc.delete_page(doc.page_count - 1)
+        doc_wrapper.page_list = [page for page in doc]
+        doc_wrapper.num_pages = len(doc)
 
 ##
 ## Begin general function definitions.
@@ -672,14 +721,29 @@ def process_command_line_arguments(parsed_args, cmd_parser):
             cmd_parser.print_usage()
         #cmd_parser.exit() # Exits whole program.
         ex.cleanup_and_exit(1)
-    # Note: Below code currently handled by the argparse + option, not *, on pdf_input_doc.
-    #elif len(args.pdf_input_doc) < 1:
-    #    print("\nError in pdfCropMargins: No PDF document argument passed in.",
-    #          file=sys.stderr)
-    #    print()
-    #    cmd_parser.print_usage()
-    #    #cmd_parser.exit() # Exits whole program.
-    #    ex.cleanup_and_exit(1)
+    elif len(args.pdf_input_doc) < 1:
+        if args.gui:
+            # No file provided with --gui: show a native file-picker dialog.
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ["osascript", "-e",
+                     "POSIX path of (choose file with prompt"
+                     " \"Select a PDF file:\" of type {\"com.adobe.pdf\", \"pdf\"})"],
+                    capture_output=True, text=True,
+                )
+                chosen = result.stdout.strip()
+            except Exception:
+                chosen = ""
+            if not chosen:
+                ex.cleanup_and_exit(0)  # User cancelled the picker.
+            args.pdf_input_doc = [chosen]
+        else:
+            print("\nError in pdfCropMargins: No PDF document argument passed in.",
+                  file=sys.stderr)
+            print()
+            cmd_parser.print_usage()
+            ex.cleanup_and_exit(1)
 
     #
     # Process input and output filenames.
@@ -1093,6 +1157,13 @@ def process_pdf_file(input_doc_pathname, fixed_input_doc_pathname, output_doc_pa
     else:
         input_doc_mupdf_wrapper.apply_crop_list(crop_list, page_nums_to_crop,
                         already_cropped_by_this_program)
+
+    ##
+    ## If requested, remove the last page when it contains only a page number or date.
+    ##
+
+    if args.deleteLastPageIfNumberOrDate:
+        delete_last_page_if_number_or_date(input_doc_mupdf_wrapper)
 
     ##
     ## Write the final PDF out to a file.

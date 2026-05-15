@@ -42,3 +42,9 @@ pip-delete-this-directory.txt
 # Mypy type-checker cache.
 .mypy_cache
 
+# Virtual env and build artifacts
+.venv/
+build/
+dist/
+.DS_Store
+

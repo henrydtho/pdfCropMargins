@@ -257,7 +257,7 @@ else:
         description=description, epilog=epilog,
         prog="pdfcropmargins")
 
-cmd_parser.add_argument("pdf_input_doc", nargs="+", metavar="PDF_FILE", help="""
+cmd_parser.add_argument("pdf_input_doc", nargs="*", metavar="PDF_FILE", help="""
 
    The pathname of the PDF file to crop.  Use quotes around any file or
    directory name which contains a space.  If no filename is given for the
@@ -940,6 +940,15 @@ cmd_parser.add_argument("--version", action="version",
 
    Return the pdfCropMargins version number and exit immediately.  All
    other options are ignored.^^n""")
+
+cmd_parser.add_argument("-dlp", "--deleteLastPageIfNumberOrDate", action="store_true",
+                        help="""
+
+   If the last page of the PDF contains only a page number (e.g. "42",
+   "Page 42", "- 42 -", "42 of 100") or a date (e.g. "January 2024",
+   "01/01/2024", "2024-01-01"), that page will be deleted from the output
+   document.  This is useful for documents that end with a trailing page
+   containing nothing but a page number or a date stamp.^^n""")
 
 cmd_parser.add_argument("-wcdf", "--writeCropDataToFile", type=str,
                         default="", metavar="FILEPATH", help="""
