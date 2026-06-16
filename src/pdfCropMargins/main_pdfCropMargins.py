@@ -800,7 +800,8 @@ def process_command_line_arguments(parsed_args, cmd_parser):
               " are:\n   ", args.absolutePreCrop4)
 
     if args.percentRetain and not args.percentRetain4:
-        args.percentRetain4 = args.percentRetain * 4 # expand to 4 percents
+        # Only crop the bottom margin to a tight bounding box; retain 100% of left, right, and top.
+        args.percentRetain4 = [100.0, 0.0, 100.0, 100.0]
     # See if all four percents are explicitly set and use those if so.
     if args.verbose:
         print("\nThe percentages of margins to retain are:\n   ",
@@ -808,6 +809,10 @@ def process_command_line_arguments(parsed_args, cmd_parser):
 
     if args.absoluteOffset and not args.absoluteOffset4:
         args.absoluteOffset4 = args.absoluteOffset * 4 # expand to 4 offsets
+    if not args.absoluteOffset4:
+        args.absoluteOffset4 = [0.0, 0.0, 0.0, 0.0]
+    # Override the bottom margin to retain exactly 40bp of padding below content.
+    args.absoluteOffset4[1] = -40.0
     if args.verbose:
         print("\nThe absolute offsets to be applied to each margin, in units of bp,"
               " are:\n   ", args.absoluteOffset4)

@@ -3,9 +3,16 @@
 
 a = Analysis(
     ['app_launcher.py'],
-    pathex=['/Users/206870216/Desktop/Python/pdfCropMargins/src'],
-    binaries=[],
-    datas=[],
+    pathex=['/Users/206870216/Downloads/5. Python/pdfCropMargins/src'],
+    binaries=[
+        ('/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pymupdf/_mupdf.so', 'pymupdf'),
+        ('/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pymupdf/libmupdfcpp.so', 'pymupdf'),
+        ('/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pymupdf/libmupdf.dylib', 'pymupdf'),
+    ],
+    datas=[
+        ('/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/pymupdf', 'pymupdf'),
+        ('/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/fitz', 'fitz'),
+    ],
     hiddenimports=[
         'pdfCropMargins',
         'pdfCropMargins.pdfCropMargins',
@@ -20,6 +27,10 @@ a = Analysis(
         'pdfCropMargins.get_window_sizing_info',
         'pdfCropMargins.vendor',
         'pdfCropMargins.vendor.pysimplegui_4_foss',
+        'fitz',
+        'pymupdf',
+        'pymupdf.mupdf',
+        'pymupdf.pymupdf',
     ],
     hookspath=[],
     hooksconfig={},

@@ -153,7 +153,7 @@ def _run_gui():
             # or date.  Save output to the same folder as the input.
             output_dir = os.path.dirname(os.path.abspath(pdf_path))
             output_path, exit_code, stdout_str, stderr_str = crop(
-                [pdf_path, "-c", "m", "-dlp", "-o", output_dir], string_io=True
+                [pdf_path, "-c", "m", "-dlp", "-a4", "0", "-25", "0", "0", "-o", output_dir], string_io=True
             )
             if exit_code in (0, None):
                 ok += 1
