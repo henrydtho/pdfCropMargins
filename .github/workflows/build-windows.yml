@@ -2,7 +2,7 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -19,14 +19,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pymupdf pyinstaller
+          pip install pymupdf pillow pyinstaller
+          pip install -e .
 
       - name: Build EXE
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "AutoCropPDF" app_launcher.py
+          pyinstaller --noconfirm pdfCropMargins_windows.spec
 
-      - name: Upload EXE artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AutoCropPDF-Windows
-          path: dist/AutoCropPDF.exe
+          name: pdfCropMargins-Windows
+          path: dist\pdfCropMargins.exe

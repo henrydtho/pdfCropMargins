@@ -37,8 +37,9 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    [],
-    exclude_binaries=True,
+    a.binaries,
+    a.datas,
+    exclude_binaries=False,
     name='pdfCropMargins',
     debug=False,
     bootloader_ignore_signals=False,
@@ -51,13 +52,4 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=None,              # Replace with path to a .ico file if you have one
-)
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='pdfCropMargins',
 )
